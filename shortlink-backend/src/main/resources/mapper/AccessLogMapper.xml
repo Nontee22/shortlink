@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shortlink.mapper.AccessLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.shortlink.entity.AccessLog">
+        <id column="id" property="id"/>
+        <result column="short_code" property="shortCode"/>
+        <result column="ip" property="ip"/>
+        <result column="user_agent" property="userAgent"/>
+        <result column="referer" property="referer"/>
+        <result column="device_type" property="deviceType"/>
+        <result column="browser" property="browser"/>
+        <result column="os" property="os"/>
+        <result column="country" property="country"/>
+        <result column="province" property="province"/>
+        <result column="city" property="city"/>
+        <result column="access_time" property="accessTime"/>
+    </resultMap>
+
+    <select id="countPvByShortCode" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_access_log
+        WHERE short_code = #{shortCode}
+    </select>
+
+    <select id="countUvByShortCode" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT ip) FROM t_access_log
+        WHERE short_code = #{shortCode}
+    </select>
+
+    <select id="selectDailyTrend" resultType="java.util.Map">
+        SELECT 
+            DATE(access_time) as date,
+            COUNT(*) as pv,
+            COUNT(DISTINCT ip) as uv
+        FROM t_access_log
+        WHERE short_code = #{shortCode}
+        AND access_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY DATE(access_time)
+        ORDER BY date ASC
+    </select>
+
+    <select id="selectRefererStats" resultType="java.util.Map">
+        SELECT 
+            IFNULL(referer, '直接访问') as referer,
+            COUNT(*) as count
+        FROM t_access_log
+        WHERE short_code = #{shortCode}
+        GROUP BY referer
+        ORDER BY count DESC
+        LIMIT 10
+    </select>
+
+    <select id="selectDeviceStats" resultType="java.util.Map">
+        SELECT 
+            IFNULL(device_type, '未知') as device,
+            COUNT(*) as count
+        FROM t_access_log
+        WHERE short_code = #{shortCode}
+        GROUP BY device_type
+        ORDER BY count DESC
+    </select>
+
+    <select id="selectRecentAccess" resultMap="BaseResultMap">
+        SELECT * FROM t_access_log
+        WHERE short_code = #{shortCode}
+        ORDER BY access_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countTodayPv" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_access_log
+        WHERE short_code = #{shortCode}
+        AND access_time >= #{today}
+    </select>
+
+</mapper>

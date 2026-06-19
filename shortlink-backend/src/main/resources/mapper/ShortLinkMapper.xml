@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shortlink.mapper.ShortLinkMapper">
+
+    <resultMap id="BaseResultMap" type="com.shortlink.entity.ShortLink">
+        <id column="id" property="id"/>
+        <result column="short_code" property="shortCode"/>
+        <result column="original_url" property="originalUrl"/>
+        <result column="url_hash" property="urlHash"/>
+        <result column="domain" property="domain"/>
+        <result column="description" property="description"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="status" property="status"/>
+        <result column="click_count" property="clickCount"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByShortCode" resultMap="BaseResultMap">
+        SELECT * FROM t_short_link
+        WHERE short_code = #{shortCode} AND deleted = 0
+    </select>
+
+    <select id="selectByOriginalUrl" resultMap="BaseResultMap">
+        SELECT * FROM t_short_link
+        WHERE url_hash = #{urlHash} AND original_url = #{originalUrl} AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <update id="incrementClickCount">
+        UPDATE t_short_link
+        SET click_count = click_count + 1
+        WHERE short_code = #{shortCode}
+    </update>
+
+    <update id="updateClickCount">
+        UPDATE t_short_link
+        SET click_count = #{clickCount}
+        WHERE short_code = #{shortCode}
+    </update>
+
+</mapper>

@@ -1,0 +1,31 @@
+# Java
+*.class
+*.jar
+*.war
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Qoder
+.qoder/
+
+# Environment (contains passwords, DO NOT commit)
+.env
