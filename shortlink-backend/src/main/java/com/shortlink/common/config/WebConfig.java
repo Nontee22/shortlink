@@ -29,6 +29,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/api/**");
+                .addPathPatterns("/api/**"); // 限流拦截器，拦截所有/api/**路径
     }
 }

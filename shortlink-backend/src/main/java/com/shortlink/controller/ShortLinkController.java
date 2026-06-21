@@ -28,6 +28,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
+//为final方法提供构造器注入
 @RequiredArgsConstructor
 @Tag(name = "短链接管理", description = "短链接的创建、查询、跳转等接口")
 public class ShortLinkController {
