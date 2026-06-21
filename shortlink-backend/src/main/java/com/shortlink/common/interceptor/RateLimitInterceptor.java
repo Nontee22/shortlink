@@ -55,13 +55,17 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         RATE_LIMIT_SCRIPT.setResultType(Long.class);
     }
 
+    // 在controller执行前执行该拦截接口方法
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+
+        // 非 Controller 方法（如静态资源）无需限流，直接放行
         if (!(handler instanceof HandlerMethod handlerMethod)) {
             return true;
         }
 
         RateLimit rateLimit = handlerMethod.getMethodAnnotation(RateLimit.class);
+        // 方法上没有注解，则不进行限流
         if (rateLimit == null) {
             return true;
         }
@@ -73,6 +77,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         long now = System.currentTimeMillis();
         long windowStart = now - rateLimit.window() * 1000L;
 
+        // 执行 Lua 脚本
         List<String> keys = Collections.singletonList(key);
         Long result = stringRedisTemplate.execute(
                 RATE_LIMIT_SCRIPT,
@@ -91,6 +96,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return true;
     }
 
+    // 获取客户端 IP 地址
     private String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
