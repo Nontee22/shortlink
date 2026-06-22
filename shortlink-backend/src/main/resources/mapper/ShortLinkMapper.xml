@@ -40,4 +40,19 @@
         WHERE short_code = #{shortCode}
     </update>
 
+    <!-- 物理删除：根据短码直接删除记录 -->
+    <delete id="physicalDeleteByShortCode">
+        DELETE FROM t_short_link
+        WHERE short_code = #{shortCode}
+    </delete>
+
+    <!-- 物理删除：批量根据短码直接删除记录 -->
+    <delete id="physicalDeleteBatchByShortCodes">
+        DELETE FROM t_short_link
+        WHERE short_code IN
+        <foreach collection="shortCodes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+    </delete>
+
 </mapper>

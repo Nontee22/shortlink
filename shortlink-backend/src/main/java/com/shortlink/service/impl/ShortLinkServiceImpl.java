@@ -64,7 +64,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     private final Random random = new Random();
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class) // 事务无论遇到什么异常都会回退
     public ShortLinkVO create(ShortLinkCreateDTO dto) {
         String originalUrl = dto.getOriginalUrl();
         String urlHash = sha256(originalUrl);
@@ -78,12 +78,13 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         RLock lock = redissonClient.getLock(lockKey);
 
         try {
+            // 获取锁，等待5秒，每10毫秒尝试一次
             boolean acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
             if (!acquired) {
                 throw new BusinessException("系统繁忙，请稍后重试");
             }
 
-            // 自动生成模式：同URL去重
+            // 自动生成模式下判断是否已经有短码
             if (!isCustom) {
                 ShortLink existing = shortLinkMapper.selectByOriginalUrl(urlHash, originalUrl);
                 if (existing != null) {
@@ -92,8 +93,9 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                 }
             }
 
-            // 确定短码
+
             String shortCode;
+            // 自定义短码
             if (isCustom) {
                 shortCode = dto.getCustomCode();
                 // 唯一性校验：布隆过滤器 + DB双重确认
@@ -267,11 +269,8 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String shortCode) {
-        LambdaUpdateWrapper<ShortLink> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(ShortLink::getShortCode, shortCode)
-                .set(ShortLink::getDeleted, 1)
-                .set(ShortLink::getUpdatedTime, LocalDateTime.now());
-        shortLinkMapper.update(null, wrapper);
+        // 物理删除：调用自定义Mapper方法直接删除记录
+        shortLinkMapper.physicalDeleteByShortCode(shortCode);
         
         // 删除缓存
         stringRedisTemplate.delete(CACHE_KEY_PREFIX + shortCode);
@@ -284,11 +283,8 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             return;
         }
         
-        LambdaUpdateWrapper<ShortLink> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.in(ShortLink::getShortCode, shortCodes)
-                .set(ShortLink::getDeleted, 1)
-                .set(ShortLink::getUpdatedTime, LocalDateTime.now());
-        shortLinkMapper.update(null, wrapper);
+        // 物理删除：调用自定义Mapper方法批量直接删除记录
+        shortLinkMapper.physicalDeleteBatchByShortCodes(shortCodes);
         
         // 批量删除缓存
         List<String> keys = shortCodes.stream()
@@ -307,12 +303,23 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         return vo;
     }
 
+    /**
+     * 对输入字符串进行SHA-256哈希计算
+     * 用于URL去重和锁控制，保证相同URL产生相同hash值
+     *
+     * @param input 待哈希的原始字符串（通常是URL）
+     * @return 64位十六进制字符串（256位哈希值的十六进制表示）
+     */
     static String sha256(String input) {
         try {
+            // 获取SHA-256算法的MessageDigest实例
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // 将输入字符串转为UTF-8字节数组，并计算哈希值（返回32字节数组）
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            // 将字节数组转换为十六进制字符串（JDK 17+ 使用HexFormat）
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
+            // SHA-256是标准算法，理论上不会抛出此异常，若发生则包装为运行时异常
             throw new RuntimeException(e);
         }
     }
