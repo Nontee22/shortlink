@@ -20,9 +20,9 @@ import java.util.List;
  * 使用 Redis 滑动窗口算法：ZSET 存储每次请求的时间戳，
  * 每次请求时清除窗口外的旧记录，统计窗口内请求数。
  */
-@Slf4j
-@Component
-@RequiredArgsConstructor
+@Slf4j // 日志
+@Component // 将普通的 Java 类交给 Spring IOC 容器（工厂） 管理
+@RequiredArgsConstructor // 为被 final 修饰的字段，生成构造方法
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -70,12 +70,12 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String ip = getClientIp(request);
+        String ip = getClientIp(request); // 获取客户端 IP
         String uri = request.getRequestURI();
         String key = "shortlink:rate:" + ip + ":" + uri;
 
-        long now = System.currentTimeMillis();
-        long windowStart = now - rateLimit.window() * 1000L;
+        long now = System.currentTimeMillis(); // 当前时间
+        long windowStart = now - rateLimit.window() * 1000L; // 窗口起始时间
 
         // 执行 Lua 脚本
         List<String> keys = Collections.singletonList(key);

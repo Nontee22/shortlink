@@ -6,7 +6,10 @@ import java.lang.annotation.*;
  * 接口限流注解
  * 基于 IP + 接口维度，使用 Redis 滑动窗口实现
  */
+
+// 这个自定义注解只能用在方法
 @Target(ElementType.METHOD)
+// 这个注解在程序运行时（JVM 运行期间）依然保留
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RateLimit {
