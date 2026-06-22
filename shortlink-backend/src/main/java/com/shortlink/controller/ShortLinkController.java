@@ -40,8 +40,8 @@ public class ShortLinkController {
      * 创建短链接
      */
     @PostMapping("/api/short-link/create")
-    @Operation(summary = "创建短链接", description = "根据原始URL创建短链接")
-    @RateLimit(window = 60, maxCount = 10, message = "创建过于频繁，请1分钟后再试")
+    @Operation(summary = "创建短链接", description = "根据原始URL创建短链接") // 描述一个 REST API 操作
+    @RateLimit(window = 60, maxCount = 10, message = "创建过于频繁，请1分钟后再试") // 自定义注解，用来限流
     public Result<ShortLinkVO> create(@Valid @RequestBody ShortLinkCreateDTO dto) {
         ShortLinkVO vo = shortLinkService.create(dto);
         return Result.success(vo);
