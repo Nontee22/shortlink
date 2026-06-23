@@ -98,7 +98,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             // 自定义短码
             if (isCustom) {
                 shortCode = dto.getCustomCode();
-                // 唯一性校验：布隆过滤器 + DB双重确认
+                // 判断短码是否可能存在，返回 true 表示可能存在，false 表示肯定不存在
                 if (bloomFilterUtil.mightContain(shortCode)) {
                     ShortLink existByCode = shortLinkMapper.selectByShortCode(shortCode);
                     if (existByCode != null) {
@@ -106,10 +106,10 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                     }
                 }
             } else {
-                shortCode = shortCodeGenerator.generate();
-                while (bloomFilterUtil.mightContain(shortCode)) {
-                    shortCode = shortCodeGenerator.generate();
-                }
+                // 自动生成短码
+                do {
+                    shortCode = shortCodeGenerator.generate(); // 生成短码
+                } while (bloomFilterUtil.mightContain(shortCode));
             }
 
             // 创建实体
@@ -143,7 +143,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             return convertToVO(shortLink);
 
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt(); // 标签设为true，留给上层代码判断，至于停不停，看线程自己的代码怎么写
             throw new BusinessException("创建短链接失败");
         } finally {
             if (lock.isHeldByCurrentThread()) {
