@@ -38,8 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-// 使用构造器注入
-@RequiredArgsConstructor
+@RequiredArgsConstructor // 为final方法提供构造器注入
 public class ShortLinkServiceImpl implements ShortLinkService {
 
     private final ShortLinkMapper shortLinkMapper;

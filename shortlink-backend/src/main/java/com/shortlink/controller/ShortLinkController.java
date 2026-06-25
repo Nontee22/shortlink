@@ -28,8 +28,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-//为final方法提供构造器注入
-@RequiredArgsConstructor
+@RequiredArgsConstructor // 为final方法提供构造器注入
 @Tag(name = "短链接管理", description = "短链接的创建、查询、跳转等接口")
 public class ShortLinkController {
 
@@ -53,6 +52,7 @@ public class ShortLinkController {
 
     /**
      * 短链接跳转
+     * PathVariable,从URL路径中获取参数，用于获取短码，例如：/sl/
      */
     @GetMapping("/sl/{shortCode}")
     @Operation(summary = "短链接跳转", description = "访问短链接，302重定向到原始URL")
@@ -60,8 +60,8 @@ public class ShortLinkController {
             @Parameter(description = "短码") @PathVariable String shortCode,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-        
-        // 校验短码格式（6位字母数字），避免拦截静态资源请求
+
+        // 校验短码格式（6位字母数字），matcher创建一个匹配器，.matches()是否全匹配
         if (!SHORT_CODE_PATTERN.matcher(shortCode).matches()) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "无效的短码");
             return;

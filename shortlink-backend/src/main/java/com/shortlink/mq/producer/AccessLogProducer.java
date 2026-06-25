@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
+@RequiredArgsConstructor // 为final方法提供构造器注入
 public class AccessLogProducer {
 
     private final RabbitTemplate rabbitTemplate;
@@ -23,9 +23,10 @@ public class AccessLogProducer {
      */
     public void send(AccessLogMessage message) {
         try {
+            // convertAndSend自动将Java对象序列化为JSON并发送
             rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.ACCESS_LOG_EXCHANGE,
-                    RabbitMQConfig.ACCESS_LOG_ROUTING_KEY,
+                    RabbitMQConfig.ACCESS_LOG_EXCHANGE,     // 交换机名称
+                    RabbitMQConfig.ACCESS_LOG_ROUTING_KEY,  // 路由键名称
                     message
             );
             log.debug("发送访问日志消息成功: {}", message.getShortCode());
